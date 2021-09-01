@@ -3,7 +3,7 @@ include settings.mk
 .PHONY: all toolchain system image clean
 
 all:
-	@make clean toolchain system kernel image
+	@make clean toolchain system image
 
 toolchain:
 	@$(SCRIPTS_DIR)/toolchain.sh

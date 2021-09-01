@@ -2,7 +2,7 @@
 
 Cross Linux From Scratch (CLFS) is a project that provides you with step-by-step instructions for building your own customized Linux system entirely from source.
 
-**The default password is `qnux`. This can be changed by editing `CONFIG_ROOT_PASSWD` of `config.mk`.**
+**The default password is `clfs`. This can be changed by editing `CONFIG_ROOT_PASSWD` of `config.mk`.**
 
 ## Preparing Build Environment
 
@@ -26,8 +26,8 @@ make toolchain
 ```
 
 ```
-$ out/tools/bin/x86_64-qnux-linux-gnu-gcc --version
-x86_64-qnux-linux-gnu-gcc (qNux x86_64 2021.08) 11.2.0
+$ out/tools/bin/x86_64-clfs-linux-musl-gcc --version
+x86_64-clfs-linux-musl-gcc (CLFS x86_64 2021.09) 11.2.0
 Copyright (C) 2021 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -49,9 +49,9 @@ make image
 
 ```bash
 sudo su
-cat out/images/qNux-1.0.0.tar.gz | docker import - qnux:1.0.0
-docker run --name qnux -d -i -t --restart always qnux:1.0.0 /bin/sh
-docker attach qnux
+cat out/images/CLFS-1.0.0.tar.gz | docker import - clfs:1.0.0
+docker run --name clfs -d -i -t --restart always clfs:1.0.0 /bin/sh
+docker attach clfs
 ```
 
 ## Publish a Docker Image to GitHub

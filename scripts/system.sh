@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# qNux system build script
+# Cross Linux From Scratch (CLFS) system build script
 # Optional parameteres below:
 set -o nounset
 set -o errexit
@@ -17,8 +17,8 @@ export RANLIB="$TOOLS_DIR/bin/$CONFIG_TARGET-ranlib"
 export READELF="$TOOLS_DIR/bin/$CONFIG_TARGET-readelf"
 export STRIP="$TOOLS_DIR/bin/$CONFIG_TARGET-strip"
 
-CONFIG_PKG_VERSION="qNux x86_64 2021.08"
-CONFIG_BUG_URL="https://github.com/LeeKyuHyuk/qNux/issues"
+CONFIG_PKG_VERSION="CLFS x86_64 2021.09"
+CONFIG_BUG_URL="https://github.com/LeeKyuHyuk/CLFS-Docker/issues"
 
 # End of optional parameters
 function step() {
@@ -149,7 +149,7 @@ netdev:x:82:
 users:x:100:
 nogroup:x:65534:
 EOF
-echo "Welcome to qNux" > $ROOTFS_DIR/etc/issue
+echo "Welcome to Cross Linux From Scratch (CLFS) on the Docker" > $ROOTFS_DIR/etc/issue
 ln -svf /proc/self/mounts $ROOTFS_DIR/etc/mtab
 ln -svf /tmp $ROOTFS_DIR/var/cache
 ln -svf /tmp $ROOTFS_DIR/var/lib/misc
@@ -165,37 +165,19 @@ step "[3/9] Copy GCC 11.2.0 Library"
 cp -v $TOOLS_DIR/$CONFIG_TARGET/lib64/libgcc_s* $ROOTFS_DIR/lib/
 cp -v $TOOLS_DIR/$CONFIG_TARGET/lib64/libatomic* $ROOTFS_DIR/lib/
 
-step "[4/9] Glibc 2.34"
-extract $SOURCES_DIR/glibc-2.34.tar.xz $BUILD_DIR
-mkdir -pv $BUILD_DIR/glibc-2.34/glibc-build
-( cd $BUILD_DIR/glibc-2.34/glibc-build && \
-    CC="$TOOLS_DIR/bin/$CONFIG_TARGET-gcc" \
-    CXX="$TOOLS_DIR/bin/$CONFIG_TARGET-g++" \
-    AR="$TOOLS_DIR/bin/$CONFIG_TARGET-ar" \
-    AS="$TOOLS_DIR/bin/$CONFIG_TARGET-as" \
-    LD="$TOOLS_DIR/bin/$CONFIG_TARGET-ld" \
-    RANLIB="$TOOLS_DIR/bin/$CONFIG_TARGET-ranlib" \
-    READELF="$TOOLS_DIR/bin/$CONFIG_TARGET-readelf" \
-    STRIP="$TOOLS_DIR/bin/$CONFIG_TARGET-strip" \
-    CFLAGS="-O2 " CPPFLAGS="" CXXFLAGS="-O2 " LDFLAGS="" \
-    ac_cv_path_BASH_SHELL=/bin/bash \
-    libc_cv_forced_unwind=yes \
-    libc_cv_ssp=no \
-    $BUILD_DIR/glibc-2.34/configure \
-    --target=$CONFIG_TARGET \
-    --host=$CONFIG_TARGET \
-    --build=$CONFIG_HOST \
+
+step "[4/9] musl 1.2.2"
+extract $SOURCES_DIR/musl-1.2.2.tar.gz $BUILD_DIR
+mkdir $BUILD_DIR/musl-1.2.2/musl-build
+( cd $BUILD_DIR/musl-1.2.2/musl-build && \
+    $BUILD_DIR/musl-1.2.2/configure \
+    CROSS_COMPILE="$TOOLS_DIR/bin/$CONFIG_TARGET-" \
     --prefix=/usr \
-    --enable-shared \
-    --without-cvs \
-    --disable-profile \
-    --without-gd \
-    --enable-obsolete-rpc \
-    --enable-kernel=4.19 \
-    --with-headers=$SYSROOT_DIR/usr/include )
-make -j$PARALLEL_JOBS -C $BUILD_DIR/glibc-2.34/glibc-build
-make -j$PARALLEL_JOBS install_root=$ROOTFS_DIR install -C $BUILD_DIR/glibc-2.34/glibc-build
-rm -rf $BUILD_DIR/glibc-2.34
+    --target=$CONFIG_TARGET \
+    --enable-static )
+make -j$PARALLEL_JOBS -C $BUILD_DIR/musl-1.2.2/musl-build
+make -j$PARALLEL_JOBS DESTDIR=$ROOTFS_DIR install -C $BUILD_DIR/musl-1.2.2/musl-build
+rm -rf $BUILD_DIR/musl-1.2.2
 
 step "[5/9] Busybox 1.34.0"
 extract $SOURCES_DIR/busybox-1.34.0.tar.bz2 $BUILD_DIR
@@ -390,9 +372,6 @@ null::sysinit:/bin/ln -sf /proc/self/fd/2 /dev/stderr
 ::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
 ::sysinit:/etc/init.d/rcS
-# Put a getty on the serial port
-console::respawn:/sbin/getty -L  console 0 vt100 # GENERIC_SERIAL
-tty1::respawn:/sbin/getty -L  tty1 0 vt100 # HDMI console
 # Stuff to do for the 3-finger salute
 #::ctrlaltdel:/sbin/reboot
 # Stuff to do before rebooting

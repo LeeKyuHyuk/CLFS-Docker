@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# qNux image build script
+# Cross Linux From Scratch (CLFS) image build script
 # Optional parameteres below:
 set -o nounset
 set -o errexit
@@ -49,7 +49,7 @@ echo '#!/bin/sh' > $BUILD_DIR/_fakeroot.fs
 echo "set -e" >> $BUILD_DIR/_fakeroot.fs
 echo "chown -h -R 0:0 $ROOTFS_DIR" >> $BUILD_DIR/_fakeroot.fs
 echo "cd $ROOTFS_DIR" >> $BUILD_DIR/_fakeroot.fs
-echo "tar -cvzf $IMAGES_DIR/qNux-$CONFIG_QNUX_VERSION.tar.gz bin boot dev etc lib lib64 linuxrc media mnt opt proc root run sbin sys tmp usr var" >> $BUILD_DIR/_fakeroot.fs
+echo "tar -cvzf $IMAGES_DIR/CLFS-$CONFIG_CLFS_VERSION.tar.gz bin boot dev etc lib lib64 linuxrc media mnt opt proc root run sbin sys tmp usr var" >> $BUILD_DIR/_fakeroot.fs
 chmod a+x $BUILD_DIR/_fakeroot.fs
 $TOOLS_DIR/usr/bin/fakeroot -- $BUILD_DIR/_fakeroot.fs
 

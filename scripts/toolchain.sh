@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# qNux toolchain build script
+# Cross Linux From Scratch (CLFS) toolchain build script
 # Optional parameteres below:
 set +h
 set -o nounset
@@ -21,8 +21,8 @@ export PKG_CONFIG_LIBDIR="$TOOLS_DIR/lib/pkgconfig:$TOOLS_DIR/share/pkgconfig"
 export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
 export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
 
-CONFIG_PKG_VERSION="qNux x86_64 2021.08"
-CONFIG_BUG_URL="https://github.com/LeeKyuHyuk/qNux/issues"
+CONFIG_PKG_VERSION="CLFS x86_64 2021.09"
+CONFIG_BUG_URL="https://github.com/LeeKyuHyuk/CLFS-Docker/issues"
 
 # End of optional parameters
 function step() {
@@ -297,37 +297,18 @@ make -j$PARALLEL_JOBS ARCH=$CONFIG_LINUX_ARCH headers_check -C $BUILD_DIR/linux-
 make -j$PARALLEL_JOBS ARCH=$CONFIG_LINUX_ARCH INSTALL_HDR_PATH=$SYSROOT_DIR headers_install -C $BUILD_DIR/linux-5.13.13
 rm -rf $BUILD_DIR/linux-5.13.13
 
-step "[15/16] glibc 2.34"
-extract $SOURCES_DIR/glibc-2.34.tar.xz $BUILD_DIR
-mkdir $BUILD_DIR/glibc-2.34/glibc-build
-( cd $BUILD_DIR/glibc-2.34/glibc-build && \
-    CC="$TOOLS_DIR/bin/$CONFIG_TARGET-gcc" \
-    CXX="$TOOLS_DIR/bin/$CONFIG_TARGET-g++" \
-    AR="$TOOLS_DIR/bin/$CONFIG_TARGET-ar" \
-    AS="$TOOLS_DIR/bin/$CONFIG_TARGET-as" \
-    LD="$TOOLS_DIR/bin/$CONFIG_TARGET-ld" \
-    RANLIB="$TOOLS_DIR/bin/$CONFIG_TARGET-ranlib" \
-    READELF="$TOOLS_DIR/bin/$CONFIG_TARGET-readelf" \
-    STRIP="$TOOLS_DIR/bin/$CONFIG_TARGET-strip" \
-    CFLAGS="-O2 " CPPFLAGS="" CXXFLAGS="-O2 " LDFLAGS="" \
-    ac_cv_path_BASH_SHELL=/bin/sh \
-    libc_cv_forced_unwind=yes \
-    libc_cv_ssp=no \
-    $BUILD_DIR/glibc-2.34/configure \
-    --target=$CONFIG_TARGET \
-    --host=$CONFIG_TARGET \
-    --build=$CONFIG_HOST \
+step "[15/16] musl 1.2.2"
+extract $SOURCES_DIR/musl-1.2.2.tar.gz $BUILD_DIR
+mkdir $BUILD_DIR/musl-1.2.2/musl-build
+( cd $BUILD_DIR/musl-1.2.2/musl-build && \
+    $BUILD_DIR/musl-1.2.2/configure \
+    CROSS_COMPILE="$TOOLS_DIR/bin/$CONFIG_TARGET-" \
     --prefix=/usr \
-    --enable-shared \
-    --without-cvs \
-    --disable-profile \
-    --without-gd \
-    --enable-obsolete-rpc \
-    --enable-kernel=5.13.13 \
-    --with-headers=$SYSROOT_DIR/usr/include )
-make -j$PARALLEL_JOBS -C $BUILD_DIR/glibc-2.34/glibc-build
-make -j$PARALLEL_JOBS install_root=$SYSROOT_DIR install -C $BUILD_DIR/glibc-2.34/glibc-build
-rm -rf $BUILD_DIR/glibc-2.34
+    --target=$CONFIG_TARGET \
+    --enable-static )
+make -j$PARALLEL_JOBS -C $BUILD_DIR/musl-1.2.2/musl-build
+make -j$PARALLEL_JOBS DESTDIR=$SYSROOT_DIR install -C $BUILD_DIR/musl-1.2.2/musl-build
+rm -rf $BUILD_DIR/musl-1.2.2
 
 step "[16/16] Gcc 11.2.0 - Final"
 tar -Jxf $SOURCES_DIR/gcc-11.2.0.tar.xz -C $BUILD_DIR
